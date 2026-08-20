@@ -11,6 +11,11 @@
 
     <depends>com.intellij.modules.platform</depends>
 
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceImplementation="it.consciousdreams.GlobalPromptStorage"/>
+        <postStartupActivity implementation="it.consciousdreams.CommitPromptStartupActivity"/>
+    </extensions>
+
     <actions>
         <group id="it.consciousdreams.CommitPromptGroup" text="Commit Prompt" popup="false">
             <add-to-group group-id="MainToolbarRight" anchor="last"/>
