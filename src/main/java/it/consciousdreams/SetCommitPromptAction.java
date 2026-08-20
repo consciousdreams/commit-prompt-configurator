@@ -1,11 +1,8 @@
 package it.consciousdreams;
 
-import com.intellij.ide.plugins.IdeaPluginDescriptor;
-import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -16,7 +13,6 @@ import java.io.IOException;
 
 public class SetCommitPromptAction extends AnAction {
 
-    private static final String PLUGIN_ID = "com.intellij.ml.llm";
     private static final String PROMPT_CLASS = "com.intellij.ml.llm.vcs.LLMCommitCustomizablePrompt";
     private static final String DIALOG_TITLE = "Set Commit Prompt";
 
@@ -72,8 +68,12 @@ public class SetCommitPromptAction extends AnAction {
     }
 
     private boolean isAiAssistantInstalled() {
-        IdeaPluginDescriptor plugin = PluginManagerCore.getPlugin(PluginId.getId(PLUGIN_ID));
-        return plugin != null && plugin.getPluginClassLoader() != null;
+        try {
+            Class.forName(PROMPT_CLASS);
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     private String readCurrentPrompt(VirtualFile workspaceFile) throws IOException, JDOMException {
@@ -86,17 +86,13 @@ public class SetCommitPromptAction extends AnAction {
         return readDefaultPrompt();
     }
 
-    // LLMCommitCustomizablePrompt lives in ml-llm.jar, visible from the main plugin classloader.
+    // LLMCommitCustomizablePrompt lives in ml-llm.jar, visible from the plugin classloader.
     private String readDefaultPrompt() {
         try {
-            IdeaPluginDescriptor plugin = PluginManagerCore.getPlugin(PluginId.getId(PLUGIN_ID));
-            if (plugin == null) return "";
-            ClassLoader cl = plugin.getPluginClassLoader();
-            if (cl == null) return "";
-            Class<?> cls = cl.loadClass(PROMPT_CLASS);
+            Class<?> cls = Class.forName(PROMPT_CLASS);
             Object instance = cls.getDeclaredConstructor().newInstance();
-            Object psString = cls.getMethod("getDefaultPrompt").invoke(instance);
-            return psString != null ? psString.toString() : "";
+            Object result = cls.getMethod("getDefaultPrompt").invoke(instance);
+            return result != null ? result.toString() : "";
         } catch (ReflectiveOperationException e) {
             return "";
         }

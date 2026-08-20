@@ -10,6 +10,7 @@
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends optional="true" config-file="withAiAssistant.xml">com.intellij.ml.llm</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <applicationService serviceImplementation="it.consciousdreams.GlobalPromptStorage"/>
