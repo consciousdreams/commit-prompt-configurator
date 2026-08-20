@@ -13,7 +13,6 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <applicationService serviceImplementation="it.consciousdreams.GlobalPromptStorage"/>
-        <postStartupActivity implementation="it.consciousdreams.CommitPromptStartupActivity"/>
     </extensions>
 
     <actions>
