@@ -4,7 +4,7 @@
 
 An IntelliJ IDEA plugin called **"Commit Prompt Configurator"** that adds a toolbar button to read and edit the AI Assistant commit message generation prompt (`com.intellij.ml.llm` plugin) — without navigating through Settings.
 
-The prompt is saved globally and automatically applied to every project you open.
+The prompt is saved globally and persists across IDE upgrades.
 
 Repository: `consciousdreams/commit-prompt-configurator`
 
@@ -14,10 +14,9 @@ Repository: `consciousdreams/commit-prompt-configurator`
 src/main/java/it/consciousdreams/
     SetCommitPromptAction.java          # toolbar action — dialog + orchestration
     WorkspacePrompt.java                # workspace.xml read/write logic
-    GlobalPromptStorage.java            # app-level storage (global prompt)
-    CommitPromptStartupActivity.java    # applies the global prompt on every project open
+    GlobalPromptStorage.java            # app-level storage (global prompt, version-independent file)
 src/main/resources/META-INF/
-    plugin.xml                          # action, service and startup activity registration
+    plugin.xml                          # action and service registration
     pluginIcon.svg                      # 40x40, shown in Settings → Plugins and Marketplace
 src/main/resources/icons/
     SetCommitPromptAction.svg           # 16x16, toolbar button icon
@@ -51,7 +50,7 @@ version = 1.0.0
 **plugin.xml**
 - ID: `it.consciousdreams.commit-prompt-configurator`
 - `<depends>`: `com.intellij.modules.platform` only
-- Registers: `applicationService` (`GlobalPromptStorage`) + `postStartupActivity` (`CommitPromptStartupActivity`)
+- Registers: `applicationService` (`GlobalPromptStorage`)
 
 ## Technical approach: direct workspace.xml write
 
@@ -97,14 +96,14 @@ All custom prompts are therefore stored in `.idea/workspace.xml` with this struc
 
 The prompt is saved in two places:
 1. `.idea/workspace.xml` of the current project (so AI Assistant picks it up immediately)
-2. `GlobalPromptStorage` — `@Service(Level.APP)` with `@State(storages=@Storage("commit-prompt-configurator.xml"))`, persisted in `~/Library/Application Support/JetBrains/IntelliJIdea<version>/options/`
-
-`CommitPromptStartupActivity` implements `StartupActivity + DumbAware` and on every project open reads from `GlobalPromptStorage` and writes to the project's `workspace.xml`.
+2. `GlobalPromptStorage` — `@Service(Level.APP)`, stored at `<JetBrains-root>/commit-prompt-configurator/prompt.txt` via plain file I/O (not `@State`/`@Storage`), so it survives IDE upgrades. Path example: `~/Library/Application Support/JetBrains/commit-prompt-configurator/prompt.txt`. Path is computed via `PathManager.getConfigDir().getParent()`.
 
 **Read priority in the dialog:**
-1. Current project's `workspace.xml`
-2. `GlobalPromptStorage` (fallback if the project has no stored value yet)
+1. `GlobalPromptStorage` (`prompt.txt`) — re-read from disk on every button click
+2. Current project's `workspace.xml` (fallback if `prompt.txt` is empty)
 3. AI Assistant default prompt via reflection on `LLMCommitCustomizablePrompt.getDefaultPrompt()`
+
+`workspace.xml` is updated only when the user explicitly saves via the dialog.
 
 The only remaining reflection is for reading the default prompt: `LLMCommitCustomizablePrompt` lives in `ml-llm.jar`, reachable from the main plugin classloader.
 
@@ -146,7 +145,7 @@ Testing via `runIde` sandbox is not possible (AI Assistant is not bundled and re
 2. **Settings → Plugins → Install Plugin from Disk** → `.zip` from `build/distributions/`
 3. Click the toolbar button, verify the dialog opens with the current prompt
 4. Edit and save, then verify in **Settings → Tools → AI Assistant → Prompt Library**
-5. Open another project, verify the prompt is already present
+5. Verify `~/Library/Application Support/JetBrains/commit-prompt-configurator/prompt.txt` was created/updated
 
 ## Marketplace description
 
@@ -157,6 +156,6 @@ Testing via `runIde` sandbox is not possible (AI Assistant is not bundled and re
 > Commit Prompt Configurator gives you instant access to the AI Assistant's commit message generation prompt directly from the toolbar.
 > Instead of navigating through Settings → Tools → AI Assistant → Prompt Library → Built-In Actions → Commit Message Generation every time, this plugin adds a dedicated action that opens an editor dialog pre-filled with the current prompt, lets you edit freely, and saves immediately to the AI Assistant settings.
 >
-> The prompt is saved globally and automatically applied to every project you open.
+> The prompt is saved globally and persists across IDE upgrades.
 >
 > Requirements: JetBrains AI Assistant must be installed and active.
