@@ -4,4 +4,5 @@
 
 ## [Unreleased]
 ### Added
-- Initial scaffold created from [IntelliJ Platform Plugin Template](https://github.com/JetBrains/intellij-platform-plugin-template)
+- Toolbar action "Set AI Commit Prompt" that opens a dialog pre-filled with the current AI Assistant commit message prompt and saves the edited value
+- Plugin icon (40x40) and action icon (16x16)

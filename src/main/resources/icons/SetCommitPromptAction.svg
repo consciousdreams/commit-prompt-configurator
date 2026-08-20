@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <!-- commit graph line top -->
+  <line x1="8" y1="1.5" x2="8" y2="5.5" stroke="#3D9FEA" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- commit node -->
+  <circle cx="8" cy="8" r="2.5" fill="none" stroke="#3D9FEA" stroke-width="1.5"/>
+  <!-- commit graph line bottom -->
+  <line x1="8" y1="10.5" x2="8" y2="14.5" stroke="#3D9FEA" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- AI sparkle (4-point star) -->
+  <path d="M13 1.5 L13.5 3 L15 3.5 L13.5 4 L13 5.5 L12.5 4 L11 3.5 L12.5 3 Z" fill="#E8A628"/>
+</svg>
