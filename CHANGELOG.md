@@ -4,4 +4,6 @@
 
 ## [Unreleased]
 ### Added
-- Initial scaffold created from [IntelliJ Platform Plugin Template](https://github.com/JetBrains/intellij-platform-plugin-template)
+- Toolbar action "Set AI Commit Prompt" opens a dialog pre-filled with the current prompt — edit and save in one click
+- The prompt is saved globally and persists across IDE upgrades
+- Saving via the dialog updates the current project immediately; AI Assistant picks it up without restarting
