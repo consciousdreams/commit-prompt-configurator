@@ -77,11 +77,11 @@ public class SetCommitPromptAction extends AnAction {
     }
 
     private String readCurrentPrompt(VirtualFile workspaceFile) throws IOException, JDOMException {
-        String fromWorkspace = WorkspacePrompt.read(workspaceFile);
-        if (fromWorkspace != null) return fromWorkspace;
-
         String fromGlobal = GlobalPromptStorage.getInstance().getPrompt();
         if (!fromGlobal.isEmpty()) return fromGlobal;
+
+        String fromWorkspace = WorkspacePrompt.read(workspaceFile);
+        if (fromWorkspace != null) return fromWorkspace;
 
         return readDefaultPrompt();
     }
