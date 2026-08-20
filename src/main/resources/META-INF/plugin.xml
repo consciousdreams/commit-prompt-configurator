@@ -6,6 +6,7 @@
     <description><![CDATA[
         <p>Commit Prompt Configurator gives you instant access to the AI Assistant's commit message generation prompt directly from the toolbar.</p>
         <p>Instead of navigating through Settings → Tools → AI Assistant → Prompt Library → Built-In Actions → Commit Message Generation every time, this plugin adds a dedicated action that opens an editor dialog pre-filled with the current prompt, lets you edit freely, and saves immediately to the AI Assistant settings.</p>
+        <p>Every time you open the dialog again, it is pre-filled with the same saved prompt, unchanged, until you edit and save a new one.</p>
         <p><b>Requirements:</b> JetBrains AI Assistant must be installed and active.</p>
     ]]></description>
 

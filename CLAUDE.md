@@ -156,6 +156,6 @@ Testing via `runIde` sandbox is not possible (AI Assistant is not bundled and re
 > Commit Prompt Configurator gives you instant access to the AI Assistant's commit message generation prompt directly from the toolbar.
 > Instead of navigating through Settings → Tools → AI Assistant → Prompt Library → Built-In Actions → Commit Message Generation every time, this plugin adds a dedicated action that opens an editor dialog pre-filled with the current prompt, lets you edit freely, and saves immediately to the AI Assistant settings.
 >
-> The prompt is saved globally and persists across IDE upgrades.
+> The prompt is saved globally and persists across IDE upgrades. Every time you open the dialog again, it is pre-filled with the same saved prompt, unchanged, until you edit and save a new one.
 >
 > Requirements: JetBrains AI Assistant must be installed and active.

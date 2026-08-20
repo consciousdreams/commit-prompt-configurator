@@ -14,7 +14,7 @@ The prompt is saved globally and persists across IDE upgrades.
 
 Click the **Set AI Commit Prompt** button in the toolbar. Edit the prompt in the dialog and click **OK** to save.
 
-The saved prompt is stored globally at `<JetBrains-root>/commit-prompt-configurator/prompt.txt` and applied to the current project immediately on save.
+The saved prompt is stored globally at `<JetBrains-root>/commit-prompt-configurator/prompt.txt` and applied to the current project immediately on save. On every future use, the dialog reopens pre-filled with that same saved prompt, unchanged, until you edit and save it again.
 
 ## Installation
 
