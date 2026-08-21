@@ -39,18 +39,12 @@ public class SetCommitPromptAction extends AnAction {
 
         try {
             String currentPrompt = readCurrentPrompt(workspaceFile);
+            String defaultPrompt = readDefaultPrompt();
 
-            String newPrompt = Messages.showMultilineInputDialog(
-                    project,
-                    "Edit the commit message generation prompt:",
-                    DIALOG_TITLE,
-                    currentPrompt,
-                    null,
-                    null
-            );
+            CommitPromptDialog dialog = new CommitPromptDialog(currentPrompt, defaultPrompt);
+            if (!dialog.showAndGet()) return;
 
-            if (newPrompt == null) return;
-
+            String newPrompt = dialog.getPrompt();
             WorkspacePrompt.write(workspaceFile, newPrompt);
             GlobalPromptStorage.getInstance().setPrompt(newPrompt);
             Messages.showInfoMessage(project, "Commit message prompt updated successfully.", DIALOG_TITLE);
