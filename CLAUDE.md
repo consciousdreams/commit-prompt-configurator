@@ -40,7 +40,7 @@ To install: **Settings → Plugins → Install Plugin from Disk**, select the `.
 **gradle.properties**
 ```properties
 group = it.consciousdreams
-version = 1.0.1
+version = 1.0.2
 ```
 
 **build.gradle.kts**
