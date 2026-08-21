@@ -10,7 +10,7 @@
 - Dialog now uses a dedicated editor (monospaced font, scrollable) instead of the plain multiline input
 - Action registered directly on the toolbar (no intermediate group in the customisation menu)
 
-## [1.0.1]
+## [1.0.1] - 2026-08-20
 ### Added
 - Toolbar action "Set AI Commit Prompt" opens a dialog pre-filled with the current prompt — edit and save in one click
 - The prompt is saved globally and persists across IDE upgrades
