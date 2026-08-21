@@ -4,7 +4,7 @@
 
 Quickly set and customize the AI Assistant commit message generation prompt from a toolbar button.
 
-Instead of navigating through **Settings → Tools → AI Assistant → Prompt Library → Built-In Actions → Commit Message Generation** every time, this plugin adds a dedicated toolbar action that opens an editor dialog pre-filled with the current prompt, lets you edit freely, and saves immediately.
+Instead of navigating deep into Settings every time, this plugin adds a toolbar button that opens an editor pre-filled with the current prompt — edit and save in seconds.
 
 The prompt is saved globally and persists across IDE upgrades.
 
@@ -12,7 +12,9 @@ The prompt is saved globally and persists across IDE upgrades.
 
 ## Usage
 
-Click the **Set AI Commit Prompt** button in the toolbar. Edit the prompt in the dialog and click **OK** to save.
+Click the **Set AI Commit Prompt** button in the toolbar. Edit the prompt in the dialog and click **Save**.
+
+Use **Reset to Default** to restore the AI Assistant's original prompt at any time — it fills the editor without saving, so you can still review or further edit before confirming.
 
 The saved prompt is stored globally at `<JetBrains-root>/commit-prompt-configurator/prompt.txt` and applied to the current project immediately on save. On every future use, the dialog reopens pre-filled with that same saved prompt, unchanged, until you edit and save it again.
 

@@ -12,7 +12,8 @@ Repository: `consciousdreams/commit-prompt-configurator`
 
 ```
 src/main/java/it/consciousdreams/
-    SetCommitPromptAction.java          # toolbar action — dialog + orchestration
+    SetCommitPromptAction.java          # toolbar action — orchestration
+    CommitPromptDialog.java             # DialogWrapper with text editor and Reset to Default button
     WorkspacePrompt.java                # workspace.xml read/write logic
     GlobalPromptStorage.java            # app-level storage (global prompt, version-independent file)
 src/main/resources/META-INF/
@@ -51,6 +52,7 @@ version = 1.0.1
 - ID: `it.consciousdreams.commit-prompt-configurator`
 - `<depends>`: `com.intellij.modules.platform` only
 - Registers: `applicationService` (`GlobalPromptStorage`)
+- Action registered directly into `MainToolbarRight` and `MainToolBar` — no wrapping group, so it appears as a top-level item in the toolbar customisation menu
 
 ## Technical approach: direct workspace.xml write
 
@@ -153,9 +155,8 @@ Testing via `runIde` sandbox is not possible (AI Assistant is not bundled and re
 > Quickly set and customize the AI Assistant commit message generation prompt from a toolbar button.
 
 **Full:**
-> Commit Prompt Configurator gives you instant access to the AI Assistant's commit message generation prompt directly from the toolbar.
-> Instead of navigating through Settings → Tools → AI Assistant → Prompt Library → Built-In Actions → Commit Message Generation every time, this plugin adds a dedicated action that opens an editor dialog pre-filled with the current prompt, lets you edit freely, and saves immediately to the AI Assistant settings.
+> Skip the long trip through Settings every time you want to tweak the AI Assistant commit message prompt. This plugin adds a toolbar button that opens an editor pre-filled with your current prompt — edit and save in seconds.
 >
-> The prompt is saved globally and persists across IDE upgrades. Every time you open the dialog again, it is pre-filled with the same saved prompt, unchanged, until you edit and save a new one.
+> The prompt is stored globally and persists across IDE upgrades, so your customisation is never lost when you update IntelliJ.
 >
 > Requirements: JetBrains AI Assistant must be installed and active.

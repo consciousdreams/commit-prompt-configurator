@@ -4,9 +4,8 @@
     <name>Commit Prompt Configurator</name>
     <vendor>consciousdreams</vendor>
     <description><![CDATA[
-        <p>Commit Prompt Configurator gives you instant access to the AI Assistant's commit message generation prompt directly from the toolbar.</p>
-        <p>Instead of navigating through Settings → Tools → AI Assistant → Prompt Library → Built-In Actions → Commit Message Generation every time, this plugin adds a dedicated action that opens an editor dialog pre-filled with the current prompt, lets you edit freely, and saves immediately to the AI Assistant settings.</p>
-        <p>Every time you open the dialog again, it is pre-filled with the same saved prompt, unchanged, until you edit and save a new one.</p>
+        <p>Skip the long trip through Settings every time you want to tweak the AI Assistant commit message prompt. This plugin adds a toolbar button that opens an editor pre-filled with your current prompt — edit and save in seconds.</p>
+        <p>The prompt is stored globally and persists across IDE upgrades, so your customisation is never lost when you update IntelliJ.</p>
         <p><b>Requirements:</b> JetBrains AI Assistant must be installed and active.</p>
     ]]></description>
 
@@ -18,15 +17,14 @@
     </extensions>
 
     <actions>
-        <group id="it.consciousdreams.CommitPromptGroup" text="Commit Prompt" popup="false">
+        <action
+            id="it.consciousdreams.SetCommitPromptAction"
+            class="it.consciousdreams.SetCommitPromptAction"
+            text="Set AI Commit Prompt"
+            description="Opens a dialog to edit the AI Assistant commit message generation prompt"
+            icon="/icons/SetCommitPromptAction.svg">
             <add-to-group group-id="MainToolbarRight" anchor="last"/>
             <add-to-group group-id="MainToolBar" anchor="last"/>
-            <action
-                id="it.consciousdreams.SetCommitPromptAction"
-                class="it.consciousdreams.SetCommitPromptAction"
-                text="Set AI Commit Prompt"
-                description="Opens a dialog to edit the AI Assistant commit message generation prompt"
-                icon="/icons/SetCommitPromptAction.svg"/>
-        </group>
+        </action>
     </actions>
 </idea-plugin>
