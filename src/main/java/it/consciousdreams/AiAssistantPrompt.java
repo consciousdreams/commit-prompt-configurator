@@ -1,6 +1,8 @@
 package it.consciousdreams;
 
+import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.openapi.application.WriteAction;
+import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jdom.Element;
@@ -14,6 +16,8 @@ final class AiAssistantPrompt {
 
     static final String PROMPT_ID = "AIAssistant.VCS.GenerateCommitMessage";
 
+    private static final String PLUGIN_ID = "com.intellij.ml.llm";
+    private static final String PROMPT_CLASS = "com.intellij.ml.llm.vcs.LLMCommitCustomizablePrompt";
     private static final String STORAGE_COMPONENT = "AIAssistantCustomInstructionsStorage";
     private static final String XML_OPTION = "option";
     private static final String XML_ENTRY = "entry";
@@ -28,6 +32,21 @@ final class AiAssistantPrompt {
     private static final String XML_STORED_INSTRUCTION = "AIAssistantStoredInstruction";
 
     private AiAssistantPrompt() {}
+
+    static boolean isActive() {
+        return PluginManagerCore.isLoaded(PluginId.getId(PLUGIN_ID));
+    }
+
+    static String defaultPrompt() {
+        try {
+            Class<?> cls = Class.forName(PROMPT_CLASS);
+            Object instance = cls.getDeclaredConstructor().newInstance();
+            Object result = cls.getMethod("getDefaultPrompt").invoke(instance);
+            return result != null ? result.toString() : "";
+        } catch (ReflectiveOperationException e) {
+            return "";
+        }
+    }
 
     @Nullable
     static String read(VirtualFile workspaceFile) throws IOException, JDOMException {
