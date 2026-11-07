@@ -1,15 +1,21 @@
 package it.consciousdreams;
 
+import com.intellij.ide.plugins.IdeaPluginDescriptor;
+import com.intellij.ide.plugins.PluginManager;
 import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jdom.JDOMException;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+
+import static java.util.Objects.requireNonNull;
 
 public class SetCommitPromptAction extends AnAction {
 
@@ -26,26 +32,30 @@ public class SetCommitPromptAction extends AnAction {
         Project project = e.getProject();
         if (project == null) return;
 
-        if (!isAiAssistantInstalled()) {
-            Messages.showErrorDialog(project, "AI Assistant plugin is not installed or not active.", DIALOG_TITLE);
+        boolean aiAssistantActive = isAiAssistantActive();
+        boolean airActive = isAirActive();
+        if (!aiAssistantActive && !airActive) {
+            Messages.showErrorDialog(project, "AI Assistant or Air must be active to edit the commit message prompt.", DIALOG_TITLE);
             return;
         }
 
-        VirtualFile workspaceFile = project.getWorkspaceFile();
-        if (workspaceFile == null) {
+        VirtualFile workspaceFile = aiAssistantActive ? project.getWorkspaceFile() : null;
+        if (aiAssistantActive && workspaceFile == null) {
             Messages.showErrorDialog(project, "Cannot locate workspace.xml for this project.", DIALOG_TITLE);
             return;
         }
 
         try {
-            String currentPrompt = readCurrentPrompt(workspaceFile);
-            String defaultPrompt = readDefaultPrompt();
+            String airDefaultPrompt = airActive ? AirPrompt.defaultPrompt() : "";
+            String defaultPrompt = airActive ? airDefaultPrompt : readDefaultPrompt();
+            String currentPrompt = readCurrentPrompt(project, workspaceFile, defaultPrompt, airActive, aiAssistantActive);
 
             CommitPromptDialog dialog = new CommitPromptDialog(currentPrompt, defaultPrompt);
             if (!dialog.showAndGet()) return;
 
             String newPrompt = dialog.getPrompt();
-            WorkspacePrompt.write(workspaceFile, newPrompt);
+            if (aiAssistantActive) AiAssistantPrompt.write(workspaceFile, newPrompt);
+            if (airActive) AirPrompt.write(project, newPrompt, airDefaultPrompt);
             GlobalPromptStorage.getInstance().setPrompt(newPrompt);
             Messages.showInfoMessage(project, "Commit message prompt updated successfully.", DIALOG_TITLE);
 
@@ -58,10 +68,11 @@ public class SetCommitPromptAction extends AnAction {
 
     @Override
     public void update(@NotNull AnActionEvent e) {
-        e.getPresentation().setEnabledAndVisible(e.getProject() != null);
+        e.getPresentation().setVisible(e.getProject() != null);
+        e.getPresentation().setEnabled(e.getProject() != null && (isAiAssistantActive() || isAirActive()));
     }
 
-    private boolean isAiAssistantInstalled() {
+    private boolean isAiAssistantActive() {
         try {
             Class.forName(PROMPT_CLASS);
             return true;
@@ -70,14 +81,28 @@ public class SetCommitPromptAction extends AnAction {
         }
     }
 
-    private String readCurrentPrompt(VirtualFile workspaceFile) throws IOException, JDOMException {
+    private boolean isAirActive() {
+        IdeaPluginDescriptor plugin = PluginManager.getInstance()
+                .findEnabledPlugin(PluginId.getId(AirPrompt.AIR_PLUGIN_ID));
+        return plugin != null;
+    }
+
+    private String readCurrentPrompt(Project project, @Nullable VirtualFile workspaceFile, String defaultPrompt,
+                                     boolean airActive, boolean aiAssistantActive) throws IOException, JDOMException {
         String fromGlobal = GlobalPromptStorage.getInstance().getPrompt();
         if (!fromGlobal.isEmpty()) return fromGlobal;
 
-        String fromWorkspace = WorkspacePrompt.read(workspaceFile);
-        if (fromWorkspace != null) return fromWorkspace;
+        if (airActive) {
+            String fromAir = AirPrompt.read(project, defaultPrompt);
+            if (fromAir != null) return fromAir;
+        }
 
-        return readDefaultPrompt();
+        if (aiAssistantActive) {
+            String fromWorkspace = AiAssistantPrompt.read(requireNonNull(workspaceFile));
+            if (fromWorkspace != null) return fromWorkspace;
+        }
+
+        return defaultPrompt;
     }
 
     // LLMCommitCustomizablePrompt lives in ml-llm.jar, visible from the plugin classloader.

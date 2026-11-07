@@ -34,13 +34,15 @@ public class CommitPromptDialog extends DialogWrapper {
 
     @Override
     protected Action @NotNull [] createLeftSideActions() {
-        return new Action[]{new DialogWrapperAction("Reset to Default") {
+        DialogWrapperAction resetAction = new DialogWrapperAction("Reset to Default") {
             @Override
             protected void doAction(java.awt.event.ActionEvent e) {
                 textArea.setText(defaultPrompt);
                 textArea.setCaretPosition(0);
             }
-        }};
+        };
+        resetAction.setEnabled(!defaultPrompt.isEmpty());
+        return new Action[]{resetAction};
     }
 
     public String getPrompt() {

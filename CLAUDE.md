@@ -2,7 +2,7 @@
 
 ## What we're building
 
-An IntelliJ IDEA plugin called **"Commit Prompt Configurator"** that adds a toolbar button to read and edit the AI Assistant commit message generation prompt (`com.intellij.ml.llm` plugin) — without navigating through Settings.
+An IntelliJ IDEA plugin called **"Commit Prompt Configurator"** that adds a toolbar button to read and edit the commit message generation prompt for Air or AI Assistant — without navigating through Settings.
 
 The prompt is saved globally and persists across IDE upgrades.
 
@@ -14,10 +14,12 @@ Repository: `consciousdreams/commit-prompt-configurator`
 src/main/java/it/consciousdreams/
     SetCommitPromptAction.java          # toolbar action — orchestration
     CommitPromptDialog.java             # DialogWrapper with text editor and Reset to Default button
-    WorkspacePrompt.java                # workspace.xml read/write logic
+    AiAssistantPrompt.java              # AI Assistant prompt in workspace.xml
+    AirPrompt.java                      # Air commit prompt in .idea/vcs.xml
     GlobalPromptStorage.java            # app-level storage (global prompt, version-independent file)
 src/main/resources/META-INF/
     plugin.xml                          # action and service registration
+    withAiAssistant.xml                 # optional AI Assistant dependency descriptor
     pluginIcon.svg                      # 40x40, shown in Settings → Plugins and Marketplace
 src/main/resources/icons/
     SetCommitPromptAction.svg           # 16x16, toolbar button icon
@@ -40,7 +42,7 @@ To install: **Settings → Plugins → Install Plugin from Disk**, select the `.
 **gradle.properties**
 ```properties
 group = it.consciousdreams
-version = 1.0.2
+version = 1.1.0
 ```
 
 **build.gradle.kts**
@@ -50,13 +52,15 @@ version = 1.0.2
 
 **plugin.xml**
 - ID: `it.consciousdreams.commit-prompt-configurator`
-- `<depends>`: `com.intellij.modules.platform` only
+- Required dependency: `com.intellij.modules.platform`; optional dependency: `com.intellij.ml.llm`
 - Registers: `applicationService` (`GlobalPromptStorage`)
 - Action registered directly into `MainToolbarRight` and `MainToolBar` — no wrapping group, so it appears as a top-level item in the toolbar customisation menu
 
-## Technical approach: direct workspace.xml write
+## Technical approach: direct project settings file writes
 
-The plugin reads and writes **directly** to `.idea/workspace.xml`. It does not use `AISystemLibraryPromptService` — see below for why reflection on that service is not viable.
+The plugin reads and writes AI Assistant's prompt directly in `.idea/workspace.xml`. It does not use `AISystemLibraryPromptService` — see below for why reflection on that service is not viable. Air 2026.3 stores its project commit message instruction as JSON in the `AgentCommitMessageProject` component of `.idea/vcs.xml`; `AirPrompt` reads and writes that component. Air's default instruction is read at runtime from the `instruction.default` property in the Air plugin's `lib/modules/intellij.air.shared.settings.jar`, located through the public `PluginManager` API. When Air is active, its project instruction and default take precedence over AI Assistant's.
+
+The toolbar action is enabled only when either AI Assistant or Air is active. A plain `runIde` sandbox without either plugin shows the button disabled.
 
 `AIAssistantCustomInstructionsStorage` (in `intellij.ml.llm.core.jar`) is annotated as:
 
@@ -65,7 +69,7 @@ The plugin reads and writes **directly** to `.idea/workspace.xml`. It does not u
 @State(name = "AIAssistantCustomInstructionsStorage", storages = [Storage("\$WORKSPACE_FILE\$")])
 ```
 
-All custom prompts are therefore stored in `.idea/workspace.xml` with this structure:
+AI Assistant's custom prompts are stored in `.idea/workspace.xml` with this structure:
 
 ```xml
 <component name="AIAssistantCustomInstructionsStorage">
@@ -88,7 +92,7 @@ All custom prompts are therefore stored in `.idea/workspace.xml` with this struc
 - Prompt ID: `AIAssistant.VCS.GenerateCommitMessage` (value of `LLMCommitCustomizablePrompt.PROMPT_ID`)
 - Component name: `AIAssistantCustomInstructionsStorage`
 
-**How read/write works (`WorkspacePrompt`):**
+**How read/write works (`AiAssistantPrompt`):**
 - `project.getWorkspaceFile()` → the `VirtualFile` for `workspace.xml`
 - `JDOMUtil.load(byte[])` → returns an `Element` (**not** `loadDocument`, which does not exist)
 - `JDOMUtil.write(Element)` to serialize, then `setBinaryContent()` inside `WriteAction.run()`
@@ -96,18 +100,20 @@ All custom prompts are therefore stored in `.idea/workspace.xml` with this struc
 
 ## Global prompt
 
-The prompt is saved in two places:
-1. `.idea/workspace.xml` of the current project (so AI Assistant picks it up immediately)
-2. `GlobalPromptStorage` — `@Service(Level.APP)`, stored at `<JetBrains-root>/commit-prompt-configurator/prompt.txt` via plain file I/O (not `@State`/`@Storage`), so it survives IDE upgrades. Path example: `~/Library/Application Support/JetBrains/commit-prompt-configurator/prompt.txt`. Path is computed via `PathManager.getConfigDir().getParent()`.
+The prompt is saved globally and in the settings of each active plugin:
+1. `.idea/workspace.xml` of the current project when AI Assistant is active
+2. `.idea/vcs.xml` of the current project when Air is active
+3. `GlobalPromptStorage` — `@Service(Level.APP)`, stored at `<JetBrains-root>/commit-prompt-configurator/prompt.txt` via plain file I/O (not `@State`/`@Storage`), so it survives IDE upgrades. Path example: `~/Library/Application Support/JetBrains/commit-prompt-configurator/prompt.txt`. Path is computed via `PathManager.getConfigDir().getParent()`.
 
 **Read priority in the dialog:**
 1. `GlobalPromptStorage` (`prompt.txt`) — re-read from disk on every button click
-2. Current project's `workspace.xml` (fallback if `prompt.txt` is empty)
-3. AI Assistant default prompt via reflection on `LLMCommitCustomizablePrompt.getDefaultPrompt()`
+2. Air's current project instruction in `.idea/vcs.xml` when Air is active
+3. Current project's `workspace.xml` when AI Assistant is active (fallback if the other copies are empty)
+4. Air's default instruction from its resource bundle when Air is active; otherwise AI Assistant's default via reflection on `LLMCommitCustomizablePrompt.getDefaultPrompt()`
 
-`workspace.xml` is updated only when the user explicitly saves via the dialog.
+`workspace.xml` is updated only when AI Assistant is active and the user explicitly saves via the dialog.
 
-The only remaining reflection is for reading the default prompt: `LLMCommitCustomizablePrompt` lives in `ml-llm.jar`, reachable from the main plugin classloader.
+The AI Assistant integration uses `Class.forName` to detect the plugin and reflection to read its default prompt. `LLMCommitCustomizablePrompt` lives in `ml-llm.jar`, reachable from the main plugin classloader.
 
 ### Why NOT to use AISystemLibraryPromptService via reflection
 
@@ -142,21 +148,19 @@ javap -verbose path/to/Class.class | grep -A5 RuntimeVisibleAnnotations
 
 ## Testing
 
-Testing via `runIde` sandbox is not possible (AI Assistant is not bundled and requires a JetBrains subscription). Correct procedure:
+The plain `runIde` sandbox targets IDEA 2026.1 and has neither Air nor AI Assistant, so its toolbar button is disabled. For an end-to-end check:
 1. `./gradlew buildPlugin`
-2. **Settings → Plugins → Install Plugin from Disk** → `.zip` from `build/distributions/`
-3. Click the toolbar button, verify the dialog opens with the current prompt
-4. Edit and save, then verify in **Settings → Tools → AI Assistant → Prompt Library**
-5. Verify `~/Library/Application Support/JetBrains/commit-prompt-configurator/prompt.txt` was created/updated
+2. Install the `.zip` from `build/distributions/` in IDEA 2026.3 with Air active; optionally enable AI Assistant too.
+3. Click **Set Commit Prompt**, edit and save, then check **Settings → AI → Air → Commit Message**.
+4. If AI Assistant is active, also check **Settings → Tools → AI Assistant → Prompt Library**.
+5. Check that **Reset to Default** loads the expected default and that `~/Library/Application Support/JetBrains/commit-prompt-configurator/prompt.txt` contains the saved prompt.
 
 ## Marketplace description
 
 **Short:**
-> Quickly set and customize the AI Assistant commit message generation prompt from a toolbar button.
+> Quickly customize commit message generation for Air and AI Assistant from a toolbar button.
 
 **Full:**
-> Skip the long trip through Settings every time you want to tweak the AI Assistant commit message prompt. This plugin adds a toolbar button that opens an editor pre-filled with your current prompt — edit and save in seconds.
+> Skip the long trip through Settings: edit the commit message prompt for JetBrains Air or AI Assistant with a dedicated button in the IDE toolbar.
 >
-> The prompt is stored globally and persists across IDE upgrades, so your customisation is never lost when you update IntelliJ.
->
-> Requirements: JetBrains AI Assistant must be installed and active.
+> Review the current prompt, load the default, or save your own instructions. The saved prompt applies to the current project; a separate global copy preserves it across IDE upgrades.

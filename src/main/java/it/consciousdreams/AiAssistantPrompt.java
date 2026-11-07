@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-final class WorkspacePrompt {
+final class AiAssistantPrompt {
 
     static final String PROMPT_ID = "AIAssistant.VCS.GenerateCommitMessage";
 
@@ -18,10 +18,16 @@ final class WorkspacePrompt {
     private static final String XML_OPTION = "option";
     private static final String XML_ENTRY = "entry";
     private static final String XML_VALUE = "value";
+    private static final String XML_NAME = "name";
+    private static final String XML_COMPONENT = "component";
+    private static final String XML_MAP = "map";
+    private static final String XML_KEY = "key";
+    private static final String XML_CONTENT = "content";
+    private static final String XML_ACTION_ID = "actionId";
     private static final String XML_INSTRUCTIONS = "instructions";
     private static final String XML_STORED_INSTRUCTION = "AIAssistantStoredInstruction";
 
-    private WorkspacePrompt() {}
+    private AiAssistantPrompt() {}
 
     @Nullable
     static String read(VirtualFile workspaceFile) throws IOException, JDOMException {
@@ -36,8 +42,8 @@ final class WorkspacePrompt {
 
         Element component = findStorageComponent(root);
         if (component == null) {
-            component = new Element("component");
-            component.setAttribute("name", STORAGE_COMPONENT);
+            component = new Element(XML_COMPONENT);
+            component.setAttribute(XML_NAME, STORAGE_COMPONENT);
             root.addContent(component);
         }
 
@@ -51,8 +57,8 @@ final class WorkspacePrompt {
 
     @Nullable
     private static Element findStorageComponent(Element root) {
-        for (Element child : root.getChildren("component")) {
-            if (STORAGE_COMPONENT.equals(child.getAttributeValue("name"))) return child;
+        for (Element child : root.getChildren(XML_COMPONENT)) {
+            if (STORAGE_COMPONENT.equals(child.getAttributeValue(XML_NAME))) return child;
         }
         return null;
     }
@@ -61,15 +67,15 @@ final class WorkspacePrompt {
     private static String extractContentValue(Element storageComponent) {
         Element instructions = findOption(storageComponent, XML_INSTRUCTIONS);
         if (instructions == null) return null;
-        Element map = instructions.getChild("map");
+        Element map = instructions.getChild(XML_MAP);
         if (map == null) return null;
         for (Element entry : map.getChildren(XML_ENTRY)) {
-            if (!PROMPT_ID.equals(entry.getAttributeValue("key"))) continue;
+            if (!PROMPT_ID.equals(entry.getAttributeValue(XML_KEY))) continue;
             Element value = entry.getChild(XML_VALUE);
             if (value == null) return null;
             Element storedInstruction = value.getChild(XML_STORED_INSTRUCTION);
             if (storedInstruction == null) return null;
-            Element contentOption = findOption(storedInstruction, "content");
+            Element contentOption = findOption(storedInstruction, XML_CONTENT);
             return contentOption != null ? contentOption.getAttributeValue(XML_VALUE) : null;
         }
         return null;
@@ -79,26 +85,26 @@ final class WorkspacePrompt {
         Element instructionsOption = findOption(storageComponent, XML_INSTRUCTIONS);
         if (instructionsOption == null) {
             instructionsOption = new Element(XML_OPTION);
-            instructionsOption.setAttribute("name", XML_INSTRUCTIONS);
+            instructionsOption.setAttribute(XML_NAME, XML_INSTRUCTIONS);
             storageComponent.addContent(instructionsOption);
         }
 
-        Element map = instructionsOption.getChild("map");
+        Element map = instructionsOption.getChild(XML_MAP);
         if (map == null) {
-            map = new Element("map");
+            map = new Element(XML_MAP);
             instructionsOption.addContent(map);
         }
 
         Element entry = null;
         for (Element e : map.getChildren(XML_ENTRY)) {
-            if (PROMPT_ID.equals(e.getAttributeValue("key"))) {
+            if (PROMPT_ID.equals(e.getAttributeValue(XML_KEY))) {
                 entry = e;
                 break;
             }
         }
         if (entry == null) {
             entry = new Element(XML_ENTRY);
-            entry.setAttribute("key", PROMPT_ID);
+            entry.setAttribute(XML_KEY, PROMPT_ID);
             map.addContent(entry);
         }
 
@@ -114,14 +120,14 @@ final class WorkspacePrompt {
             value.addContent(storedInstruction);
         }
 
-        setOption(storedInstruction, "actionId", PROMPT_ID);
-        setOption(storedInstruction, "content", promptText);
+        setOption(storedInstruction, XML_ACTION_ID, PROMPT_ID);
+        setOption(storedInstruction, XML_CONTENT, promptText);
     }
 
     @Nullable
     private static Element findOption(Element parent, String name) {
         for (Element child : parent.getChildren(XML_OPTION)) {
-            if (name.equals(child.getAttributeValue("name"))) return child;
+            if (name.equals(child.getAttributeValue(XML_NAME))) return child;
         }
         return null;
     }
@@ -130,7 +136,7 @@ final class WorkspacePrompt {
         Element option = findOption(parent, name);
         if (option == null) {
             option = new Element(XML_OPTION);
-            option.setAttribute("name", name);
+            option.setAttribute(XML_NAME, name);
             parent.addContent(option);
         }
         option.setAttribute(XML_VALUE, attrValue);
