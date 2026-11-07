@@ -47,7 +47,7 @@ public class SetCommitPromptAction extends AnAction {
 
         try {
             String airDefaultPrompt = airActive ? AirPrompt.defaultPrompt() : "";
-            String defaultPrompt = aiAssistantActive ? readDefaultPrompt() : airDefaultPrompt;
+            String defaultPrompt = airActive ? airDefaultPrompt : readDefaultPrompt();
             String currentPrompt = readCurrentPrompt(project, workspaceFile, defaultPrompt, airActive, aiAssistantActive);
 
             CommitPromptDialog dialog = new CommitPromptDialog(currentPrompt, defaultPrompt);
@@ -92,7 +92,7 @@ public class SetCommitPromptAction extends AnAction {
         String fromGlobal = GlobalPromptStorage.getInstance().getPrompt();
         if (!fromGlobal.isEmpty()) return fromGlobal;
 
-        if (airActive && !aiAssistantActive) {
+        if (airActive) {
             String fromAir = AirPrompt.read(project, defaultPrompt);
             if (fromAir != null) return fromAir;
         }
