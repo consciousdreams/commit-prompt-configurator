@@ -3,8 +3,7 @@ package it.consciousdreams;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
-import com.intellij.ide.plugins.IdeaPluginDescriptor;
-import com.intellij.ide.plugins.PluginManager;
+import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.project.Project;
@@ -16,19 +15,15 @@ import org.jdom.JDOMException;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Files;
 import java.util.Properties;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 final class AirPrompt {
 
     public static final String AIR_PLUGIN_ID = "com.intellij.air";
     private static final String COMPONENT_NAME = "AgentCommitMessageProject";
-    private static final String SETTINGS_JAR = "lib/modules/intellij.air.shared.settings.jar";
     private static final String SETTINGS_BUNDLE = "messages/AgentCommitMessageSettingsBundle.properties";
     private static final String DEFAULT_INSTRUCTION_PROPERTY = "instruction.default";
     private static final String SETTINGS_FILE = ".idea/vcs.xml";
@@ -42,31 +37,25 @@ final class AirPrompt {
 
     private AirPrompt() {}
 
-    static String defaultPrompt() throws IOException {
-        IdeaPluginDescriptor plugin = PluginManager.getInstance()
-                .findEnabledPlugin(PluginId.getId(AIR_PLUGIN_ID));
-        if (plugin == null) throw new IOException("Air is not active.");
-        return defaultPrompt(plugin.getPluginPath());
+    static boolean isActive() {
+        return PluginManagerCore.isLoaded(PluginId.getId(AIR_PLUGIN_ID));
     }
 
-    static String defaultPrompt(Path pluginPath) throws IOException {
-        Path jarPath = pluginPath.resolve(SETTINGS_JAR);
-        if (!Files.isRegularFile(jarPath)) {
-            throw new IOException("Cannot find Air's commit message settings bundle.");
+    static String defaultPrompt() throws IOException {
+        if (!isActive()) {
+            throw new IOException("Air is not active.");
         }
-        try (JarFile jar = new JarFile(jarPath.toFile())) {
-            JarEntry entry = jar.getJarEntry(SETTINGS_BUNDLE);
-            if (entry == null) throw new IOException("Cannot find Air's default commit message prompt.");
-            Properties properties = new Properties();
-            try (InputStreamReader reader = new InputStreamReader(jar.getInputStream(entry), StandardCharsets.UTF_8)) {
-                properties.load(reader);
-            }
-            String prompt = properties.getProperty(DEFAULT_INSTRUCTION_PROPERTY);
-            if (prompt == null || prompt.isEmpty()) {
-                throw new IOException("Air's default commit message prompt is empty.");
-            }
-            return prompt;
+        InputStream stream = AirPrompt.class.getClassLoader().getResourceAsStream(SETTINGS_BUNDLE);
+        if (stream == null) throw new IOException("Cannot find Air's commit message settings bundle.");
+        Properties properties = new Properties();
+        try (InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+            properties.load(reader);
         }
+        String prompt = properties.getProperty(DEFAULT_INSTRUCTION_PROPERTY);
+        if (prompt == null || prompt.isEmpty()) {
+            throw new IOException("Air's default commit message prompt is empty.");
+        }
+        return prompt;
     }
 
     @Nullable

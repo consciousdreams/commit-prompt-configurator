@@ -52,13 +52,13 @@ version = 1.1.0
 
 **plugin.xml**
 - ID: `it.consciousdreams.commit-prompt-configurator`
-- Required dependency: `com.intellij.modules.platform`; optional dependency: `com.intellij.ml.llm`
+- Required dependency: `com.intellij.modules.platform`; optional dependencies: `com.intellij.ml.llm` and `com.intellij.air`
 - Registers: `applicationService` (`GlobalPromptStorage`)
 - Action registered directly into `MainToolbarRight` and `MainToolBar` — no wrapping group, so it appears as a top-level item in the toolbar customisation menu
 
 ## Technical approach: direct project settings file writes
 
-The plugin reads and writes AI Assistant's prompt directly in `.idea/workspace.xml`. It does not use `AISystemLibraryPromptService` — see below for why reflection on that service is not viable. Air 2026.3 stores its project commit message instruction as JSON in the `AgentCommitMessageProject` component of `.idea/vcs.xml`; `AirPrompt` reads and writes that component. Air's default instruction is read at runtime from the `instruction.default` property in the Air plugin's `lib/modules/intellij.air.shared.settings.jar`, located through the public `PluginManager` API. When Air is active, its project instruction and default take precedence over AI Assistant's.
+The plugin reads and writes AI Assistant's prompt directly in `.idea/workspace.xml`. It does not use `AISystemLibraryPromptService` — see below for why reflection on that service is not viable. Air 2026.3 stores its project commit message instruction as JSON in the `AgentCommitMessageProject` component of `.idea/vcs.xml`; `AirPrompt` reads and writes that component. Air's default instruction is read at runtime from the `instruction.default` property in Air's settings bundle through the optional Air plugin dependency. When Air is active, its project instruction and default take precedence over AI Assistant's.
 
 The toolbar action is enabled only when either AI Assistant or Air is active. A plain `runIde` sandbox without either plugin shows the button disabled.
 
@@ -113,7 +113,7 @@ The prompt is saved globally and in the settings of each active plugin:
 
 `workspace.xml` is updated only when AI Assistant is active and the user explicitly saves via the dialog.
 
-The AI Assistant integration uses `Class.forName` to detect the plugin and reflection to read its default prompt. `LLMCommitCustomizablePrompt` lives in `ml-llm.jar`, reachable from the main plugin classloader.
+The AI Assistant integration uses `PluginManagerCore.isLoaded` to detect the plugin and reflection to read its default prompt. `LLMCommitCustomizablePrompt` lives in `ml-llm.jar`, reachable from the main plugin classloader.
 
 ### Why NOT to use AISystemLibraryPromptService via reflection
 

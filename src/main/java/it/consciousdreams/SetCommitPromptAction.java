@@ -1,11 +1,8 @@
 package it.consciousdreams;
 
-import com.intellij.ide.plugins.IdeaPluginDescriptor;
-import com.intellij.ide.plugins.PluginManager;
 import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -19,7 +16,6 @@ import static java.util.Objects.requireNonNull;
 
 public class SetCommitPromptAction extends AnAction {
 
-    private static final String PROMPT_CLASS = "com.intellij.ml.llm.vcs.LLMCommitCustomizablePrompt";
     private static final String DIALOG_TITLE = "Set Commit Prompt";
 
     @Override
@@ -32,8 +28,8 @@ public class SetCommitPromptAction extends AnAction {
         Project project = e.getProject();
         if (project == null) return;
 
-        boolean aiAssistantActive = isAiAssistantActive();
-        boolean airActive = isAirActive();
+        boolean aiAssistantActive = AiAssistantPrompt.isActive();
+        boolean airActive = AirPrompt.isActive();
         if (!aiAssistantActive && !airActive) {
             Messages.showErrorDialog(project, "AI Assistant or Air must be active to edit the commit message prompt.", DIALOG_TITLE);
             return;
@@ -47,7 +43,7 @@ public class SetCommitPromptAction extends AnAction {
 
         try {
             String airDefaultPrompt = airActive ? AirPrompt.defaultPrompt() : "";
-            String defaultPrompt = airActive ? airDefaultPrompt : readDefaultPrompt();
+            String defaultPrompt = airActive ? airDefaultPrompt : AiAssistantPrompt.defaultPrompt();
             String currentPrompt = readCurrentPrompt(project, workspaceFile, defaultPrompt, airActive, aiAssistantActive);
 
             CommitPromptDialog dialog = new CommitPromptDialog(currentPrompt, defaultPrompt);
@@ -69,22 +65,7 @@ public class SetCommitPromptAction extends AnAction {
     @Override
     public void update(@NotNull AnActionEvent e) {
         e.getPresentation().setVisible(e.getProject() != null);
-        e.getPresentation().setEnabled(e.getProject() != null && (isAiAssistantActive() || isAirActive()));
-    }
-
-    private boolean isAiAssistantActive() {
-        try {
-            Class.forName(PROMPT_CLASS);
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
-    }
-
-    private boolean isAirActive() {
-        IdeaPluginDescriptor plugin = PluginManager.getInstance()
-                .findEnabledPlugin(PluginId.getId(AirPrompt.AIR_PLUGIN_ID));
-        return plugin != null;
+        e.getPresentation().setEnabled(e.getProject() != null && (AiAssistantPrompt.isActive() || AirPrompt.isActive()));
     }
 
     private String readCurrentPrompt(Project project, @Nullable VirtualFile workspaceFile, String defaultPrompt,
@@ -103,17 +84,5 @@ public class SetCommitPromptAction extends AnAction {
         }
 
         return defaultPrompt;
-    }
-
-    // LLMCommitCustomizablePrompt lives in ml-llm.jar, visible from the plugin classloader.
-    private String readDefaultPrompt() {
-        try {
-            Class<?> cls = Class.forName(PROMPT_CLASS);
-            Object instance = cls.getDeclaredConstructor().newInstance();
-            Object result = cls.getMethod("getDefaultPrompt").invoke(instance);
-            return result != null ? result.toString() : "";
-        } catch (ReflectiveOperationException e) {
-            return "";
-        }
     }
 }
