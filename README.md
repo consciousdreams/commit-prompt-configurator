@@ -2,21 +2,19 @@
 
 ![Build](https://github.com/consciousdreams/commit-prompt-configurator/workflows/Build/badge.svg)
 
-Quickly set and customize the AI Assistant commit message generation prompt from a toolbar button.
+Quickly customize commit message generation for Air and AI Assistant from a toolbar button.
 
-Instead of navigating deep into Settings every time, this plugin adds a toolbar button that opens an editor pre-filled with the current prompt — edit and save in seconds.
+The button is available when either integration is active. It opens an editor pre-filled with your current prompt, so you can edit and save it in seconds.
 
-The prompt is saved globally and persists across IDE upgrades.
-
-The button works with Air as well as AI Assistant. When Air is active, it reads and updates Air's project commit message prompt in `.idea/vcs.xml`. When AI Assistant is active, it updates that plugin's prompt in `.idea/workspace.xml`.
+The prompt is applied to the current project and saved globally so it persists across IDE upgrades.
 
 ## Usage
 
-Click the **Set AI Commit Prompt** button in the toolbar. Edit the prompt in the dialog and click **Save**.
+Click the **Set Commit Prompt** button in the toolbar. Edit the prompt in the dialog and click **Save**.
 
-Use **Reset to Default** to restore the active plugin's original prompt. It fills the editor without saving, so you can still review or further edit before confirming.
+Use **Reset to Default** to load the default prompt into the editor without saving it. When both integrations are active, Air's default takes precedence.
 
-The saved prompt is stored globally at `<JetBrains-root>/commit-prompt-configurator/prompt.txt` and written to the current project's settings for each active plugin on save. Air reads `.idea/vcs.xml`; AI Assistant reads `.idea/workspace.xml`. On every future use, the dialog first loads the global copy, then falls back to the active plugin's project settings.
+On save, the prompt is written to the current project's settings for each active integration and to a global copy at `<JetBrains-root>/commit-prompt-configurator/prompt.txt`. Air stores its project prompt in `.idea/vcs.xml`; AI Assistant uses `.idea/workspace.xml`. When the dialog opens, it loads the global copy first, then Air's project prompt if Air is active, and then AI Assistant's project prompt.
 
 ## Installation
 
@@ -25,6 +23,6 @@ The saved prompt is stored globally at `<JetBrains-root>/commit-prompt-configura
   Download the [latest release](https://github.com/consciousdreams/commit-prompt-configurator/releases/latest) and install it via
   <kbd>Settings</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
 
-- **From Marketplace** *(once published)*:
+- **From Marketplace:**
 
   <kbd>Settings</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > search **Commit Prompt Configurator** > <kbd>Install</kbd>

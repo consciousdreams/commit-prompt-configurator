@@ -6,13 +6,13 @@
 
 ### Added
 
-- Support for Air's project commit message prompt in `.idea/vcs.xml`, alongside AI Assistant's prompt in `.idea/workspace.xml`
-- "Reset to Default" restores Air's default commit message prompt when Air is active
+- Support for Air commit message prompts alongside AI Assistant
+- "Reset to Default" loads Air's default prompt when Air is active
 
 ### Fixed
 
 - The toolbar button is disabled when neither AI Assistant nor Air is active
-- The prompt dialog prefers the global saved text, preserving emoji that may be absent from Air's project settings
+- "Reset to Default" is disabled when the default prompt is unavailable
 
 ## [1.0.2] - 2026-08-21
 
@@ -33,6 +33,6 @@
 - The prompt is saved globally and persists across IDE upgrades
 - Saving via the dialog updates the current project immediately; AI Assistant picks it up without restarting
 
-[Unreleased]: https://github.com/consciousdreams/commit-prompt-configurator/compare/v1.0.2...HEAD
-[1.0.2]: https://github.com/consciousdreams/commit-prompt-configurator/compare/v1.0.1...v1.0.2
-[1.0.1]: https://github.com/consciousdreams/commit-prompt-configurator/commits/v1.0.1
+[Unreleased]: https://github.com/consciousdreams/commit-prompt-configurator/compare/1.0.2...HEAD
+[1.0.2]: https://github.com/consciousdreams/commit-prompt-configurator/compare/1.0.1...1.0.2
+[1.0.1]: https://github.com/consciousdreams/commit-prompt-configurator/commits/1.0.1
