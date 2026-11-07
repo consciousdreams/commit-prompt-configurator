@@ -4,6 +4,16 @@
 
 ## [Unreleased]
 
+### Added
+
+- Support for Air's project commit message prompt in `.idea/vcs.xml`, alongside AI Assistant's prompt in `.idea/workspace.xml`
+- "Reset to Default" restores Air's default commit message prompt when Air is active
+
+### Fixed
+
+- The toolbar button is disabled when neither AI Assistant nor Air is active
+- The prompt dialog prefers the global saved text, preserving emoji that may be absent from Air's project settings
+
 ## [1.0.2] - 2026-08-21
 
 ### Added

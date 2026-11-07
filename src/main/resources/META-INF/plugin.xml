@@ -6,7 +6,7 @@
     <description><![CDATA[
         <p>Skip the long trip through Settings every time you want to tweak the AI Assistant commit message prompt. This plugin adds a toolbar button that opens an editor pre-filled with your current prompt — edit and save in seconds.</p>
         <p>The prompt is stored globally and persists across IDE upgrades, so your customisation is never lost when you update IntelliJ.</p>
-        <p><b>Requirements:</b> JetBrains AI Assistant must be installed and active.</p>
+        <p>Works with Air and AI Assistant. The prompt is applied to the current project's commit message generation settings.</p>
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
